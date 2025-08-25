@@ -9,6 +9,7 @@ import type { Request, Response } from 'express';
 import Controller from '../controller';
 import type { Logger } from '../../logger';
 import sanitize from 'sanitize-filename';
+import DOMPurify from 'dompurify';
 
 export default class EmailController extends Controller {
     private emailService: EmailService;
@@ -29,10 +30,12 @@ export default class EmailController extends Controller {
     async getHtmlPreview(req: Request, res: Response): Promise<void> {
         const { template } = req.params;
         const ctx = req.query;
+        const sanitizedCtx = DOMPurify.sanitize(JSON.stringify(ctx));
+        const ctxObject = JSON.parse(sanitizedCtx);
         const data = await this.emailService.compileTemplate(
             sanitize(template),
             TemplateFormat.HTML,
-            ctx,
+            ctxObject,
         );
         res.setHeader('Content-Type', 'text/html');
         res.status(200);
@@ -43,10 +46,12 @@ export default class EmailController extends Controller {
     async getTextPreview(req: Request, res: Response): Promise<void> {
         const { template } = req.params;
         const ctx = req.query;
+        const sanitizedCtx = DOMPurify.sanitize(JSON.stringify(ctx));
+        const ctxObject = JSON.parse(sanitizedCtx);
         const data = await this.emailService.compileTemplate(
             sanitize(template),
             TemplateFormat.PLAIN,
-            ctx,
+            ctxObject,
         );
         res.setHeader('Content-Type', 'text/plain');
         res.status(200);
